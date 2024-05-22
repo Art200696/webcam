@@ -11,21 +11,45 @@ Date: 05-05-2023
 """
 from __future__ import annotations
 from imutils.video import WebcamVideoStream
+import warnings
 import time
-
+import numpy as np
 
 class _WebcamBackground(WebcamVideoStream):
-    def __init__(self, src=0, name="WebcamVideoStream"):
+    def __init__(self, src=0, name="WebcamVideoStream", queue_max_length=10):
         super().__init__(src=src, name=name)
-        time.sleep(0.25)  # Added delay
+
+        if queue_max_length > 0:
+            self.queue_max_length = queue_max_length
+            self.frames_queue = []
+
+
+        # time.sleep(0.25)  # Added delay
 
     def update(self):
         while True:
             if self.stopped:
                 return
             if self.stream.isOpened():  # Check if the stream is opened
-                (self.grabbed, self.frame) = self.stream.read()
+                try:
+                    (self.grabbed, self.frame) = self.stream.read()
+                except:
+                    self.grabbed = False
+                    self.frame = np.ones_like((10, 10))
+                if self.queue_max_length > 0:
+                    if len(self.frames_queue) >= self.queue_max_length:
+                        self.frames_queue = self.frames_queue[:-1]
+                    self.frames_queue.append(self.frame)
+                    
 
+    def read_batch(self, batch_size=10):
+        if batch_size > self.queue_max_length:
+            warnings.warn(f"Batch size error: {batch_size=} while {self.queue_max_length=}. Setting batch size to Queue Max Length.")
+            batch_size = self.queue_max_length
+        return_batch = self.frames_queue[-batch_size:]
+        self.frames_queue = self.frames_queue[:-batch_size]
+        return [1]*len(return_batch), return_batch
+    
     def read(self):
         frame = super().read()
         return self.grabbed, frame

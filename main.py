@@ -5,7 +5,7 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt
 
-FRAMES_TO_READ = 500
+FRAMES_TO_READ = 10000000
 
 HOMOGRAPHY_MATRIX = np.array([[1.1, 0.05, -50],
                               [-0.05, 1, 50],
@@ -50,9 +50,9 @@ def test_point_transformation(webcam, point: tuple[int|float]):
 if __name__ == '__main__':
 
     # Instantiate a Webcam instance with the background parameter
-    webcam = Webcam(#src=1,
-                    src=os.path.join('resources', 'test_video.mp4'),
-                    w=640, run_in_background=False,
+    webcam = Webcam(src=0,
+                    # src=os.path.join('resources', 'test_video.mp4'),
+                    w=640, run_in_background=True,
                     homography_matrix=HOMOGRAPHY_MATRIX, crop_on_warping=True, on_aspect_ratio_lost='resize')
 
     # Iteratively read FRAMES_TO_READ frames

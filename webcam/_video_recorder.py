@@ -3,10 +3,10 @@ import os
 from warnings import warn
 from time import sleep, time
 import numpy as np
-
+from typing import Tuple
 
 class _VideoRecorder:
-    def __init__(self, output_path: str, frame_size_hw: tuple[int, int],
+    def __init__(self, output_path: str, frame_size_hw: Tuple[int, int],
                  not_override: bool = False,
                  fps: int = 30):
         """

@@ -178,6 +178,38 @@ class Webcam:
 
         return ret, frame
 
+    def read_batch(self, batch_size: int = 10, transform: bool = False):
+        """
+        Read a batch of frames from a webcam for use with webcam_background
+
+        return: a tuple of lists with 1st element being a 1 and frame as second to be in line with OpenCV read
+        """
+        ret_list, frame_list = self.cap.read_batch(batch_size=batch_size)
+        return_frame_list = []
+        for ret, frame in zip(ret_list, frame_list):
+            if ret and transform:
+                # Adjust the perspective (if needed). If homography matrix is not defined it will do nothing
+                if self.perspective_manager is not None:
+                    frame = self.perspective_manager.warp(image=frame)
+                # Get the height and width of the frame
+                h, w = frame.shape[:2]
+                # Resize the frame if the webcam's returned frame size is different from the user-set size
+                if (h, w) != (self.h, self.w):
+                    frame = self.__adjust_image_shape(frame=frame, h=self.h, w=self.w)
+
+            # Save before converting to RGB if necessary
+            if ret:
+                if self.video_recorder is not None:
+                    self.video_recorder.write(frame=frame)
+                # Convert the frame from BGR to RGB format if necessary
+                if not self.as_bgr:
+                    cv2.cvtColor(src=frame, code=cv2.COLOR_BGR2RGB, dst=frame)
+            return_frame_list.append(frame)
+        if len(return_frame_list) == 0:
+            return_frame_list = frame_list
+        return ret_list, frame_list
+
+
     def read_next_frame(self) -> np.ndarray:
         """
         Read the next frame from the video. (Skipping the frames_offset if it is greater than one.)
